@@ -4,7 +4,7 @@ export interface IProduct extends Document {
     productName: string;
     description: string;
     isInStock: boolean;
-    imageUrl:string;
+    imageUrl: string;
     price: number;
     remainingUnits?: number;
     categoryId: mongoose.Types.ObjectId;
@@ -23,15 +23,38 @@ const ProductSchema: Schema = new Schema<IProduct>({
         default: true
     },
     imageUrl: {
-        type: String
+        type: String,
+        trim: true,
+        validate: {
+            validator: (value: string): boolean => {
+                if (!value) return true;
+                try {
+                    new URL(value);
+                    return true;
+                } catch {
+                    return false;
+                }
+            },
+            message: 'Please provide a valid image URL'
+        }
     },
     price: {
         type: Number,
-        required: true
+        default: 0,
+        min: [0, 'Price cannot be negative'],
+        validate: {
+            validator: Number.isInteger,
+            message: 'Price must be an integer'
+        }
     },
     remainingUnits: {
         type: Number,
-        default: 0
+        default: 0,
+        min: [0, 'Remaining units cannot be negative'],
+        validate: {
+            validator: Number.isInteger,
+            message: 'Remaining units must be an integer'
+        }
     },
     categoryId: {
         type: mongoose.Types.ObjectId,
@@ -39,8 +62,8 @@ const ProductSchema: Schema = new Schema<IProduct>({
         required: true
     }
 },
-{
-    timestamps: true,
-});
+    {
+        timestamps: true,
+    });
 const Product = mongoose.model<IProduct>("Product", ProductSchema);
 export default Product;
